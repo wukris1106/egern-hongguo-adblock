@@ -1,0 +1,340 @@
+name: "红果短剧 / 红果漫剧 去广告"
+description: "域名层拦截穿山甲 SDK、红果漫剧自有广告 API(ad.zijieapi.com)、广告素材签名 CDN、贴片广告 CDN、广告落地页与埋点上报；正片/封面/登录/支付全部放行。纯规则，不需要 MITM 证书。"
+author: "思思（wukris1106）"
+homepage: "https://github.com/wukris1106/egern-hongguo-adblock"
+icon: "nosign"
+
+# ═══════════════════════════════════════════════════════════
+#  红果短剧（com.phoenix.read · iOS「红果免费短剧」）
+#  红果漫剧（com.kylin.read）
+#  ---------------------------------------------------------
+#  · 规则自上而下 = 优先级：所有 REJECT 在前，白名单 DIRECT 在后
+#  · 漫剧域名：com.kylin.read 7.4.5.32 官方包 25 个 dex 反编译实证
+#  · 短剧域名：iOS 实机抓包 + 多个已实机验证的社区模块交叉
+#  · 为什么不用 MITM：番茄系 TTNet/Cronet 只信系统信任库，用户 CA 必被拒；
+#    且 ad.zijieapi.com / ecombdapi / *-ad-sign 有证书固定 → 规则层最稳
+#  · 装完杀掉 App 重开，本地缓存的开屏素材要等过期才消失
+# ═══════════════════════════════════════════════════════════
+
+rules:
+  # ── 0. 断 HTTPDNS 旁路 — 红果系用自带 HTTPDNS 解析后裸 IP 直连，域名规则看不见流量
+  #    dig.bdurl.net = TTNet native 硬编码 DNS（Android 包 mc5/a.java 实证）；dig.zjurl.cn = 备用 httpdns。断掉后 App 回退系统 DNS，下面的规则才生效
+  - domain:
+      match: 'dig.bdurl.net'
+      policy: REJECT
+  - domain:
+      match: 'dig.zjurl.cn'
+      policy: REJECT
+  # ── 1. 红果漫剧自有广告 API — com.kylin.read 7.4.5.32 反编译实证（24 处硬编码）
+  #    ad.zijieapi.com/api/ad/v1/banner/ 与 /api/incentive/marketing/done：漫剧开屏 + 信息流 banner + 激励回传都走这个域，是漫剧第一大头
+  - domain:
+      match: 'ad.zijieapi.com'
+      policy: REJECT
+  - domain:
+      match: 'ads.zijieapi.com'
+      policy: REJECT
+  - domain_regex:
+      match: '^ads[0-9]+-normal(?:-[a-z0-9]+)?\.zijieapi\.com$'
+      policy: REJECT
+  - domain_regex:
+      match: '^minigame[0-9]+-normal(?:-[a-z0-9]+)?\.zijieapi\.com$'
+      policy: REJECT
+  - domain:
+      match: 'ad.toutiao.com'
+      policy: REJECT
+  - domain:
+      match: 'leads.oceanengine.com'
+      policy: REJECT
+  # ── 2. 穿山甲 / CSJ 广告 SDK（两个 App 都内置 com.bytedance.sdk.openadsdk）
+  - domain_suffix:
+      match: 'pangolin-sdk-toutiao.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'pangolin-sdk-toutiao1.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'pangolin-sdk-toutiao-b.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'pglstatp-toutiao.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'pglstatp-toutiao-b.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'pangle.io'
+      policy: REJECT
+  - domain:
+      match: 'ad.pangle.cn'
+      policy: REJECT
+  - domain:
+      match: 'ad.pangolin.cn'
+      policy: REJECT
+  - domain_regex:
+      match: '^pangolin[^.]*\.snssdk\.com$'
+      policy: REJECT
+  - domain:
+      match: 'csjdeveloper.com'
+      policy: REJECT
+  - domain:
+      match: 'scsjsd.com'
+      policy: REJECT
+  # ── 3. 广告素材签名 CDN / 广告安装包
+  #    漫剧 dex 实证：lf3/lf6/lf9-mgsdk-sign.dailygn.com、lf*-developer-sign.bytemastatic.com、p1-luckycatopen.byteimg.com；只拦带 -sign 的广告子域，byteimg/bytemastatic 主体在第 9 段白名单放行
+  - domain_keyword:
+      match: '-ad-sign.byteimg.com'
+      policy: REJECT
+  - domain_keyword:
+      match: '-mgsdk-sign'
+      policy: REJECT
+  - domain_keyword:
+      match: '-developer-sign.bytemaimg.com'
+      policy: REJECT
+  - domain_keyword:
+      match: '-developer-sign.bytemastatic.com'
+      policy: REJECT
+  - domain_keyword:
+      match: '-open-ma-pkg-sign.bytemastatic.com'
+      policy: REJECT
+  - domain:
+      match: 'p1-luckycatopen.byteimg.com'
+      policy: REJECT
+  # ── 4. 贴片 / 插播广告视频 CDN（v5/v11/v26-reading-ad 等）
+  #    正片走 *-reading-video.qznovelvod.com，由第 9 段的 qznovelvod.com DIRECT 保住
+  - domain_regex:
+      match: '^v[0-9]+-(?:[a-z]+-)*reading-ad\.qznovelvod\.com$'
+      policy: REJECT
+  # ── 5. 广告跳转短链 / 落地页
+  - domain:
+      match: 'zlink.ugsdk.cn'
+      policy: REJECT
+  - domain_suffix:
+      match: 'praisewindow.ugsdk.cn'
+      policy: REJECT
+  - domain_keyword:
+      match: 'chengzijianzhan'
+      policy: REJECT
+  - domain:
+      match: 'activity-ag.awemeughun.com'
+      policy: REJECT
+  - domain:
+      match: 'zlink.toutiao.com'
+      policy: REJECT
+  - domain:
+      match: 'zlink.fqnovel.com'
+      policy: REJECT
+  # ── 6. 伪装随机子域广告 CDN（Android 真机 DNS 实抓确认，纯广告域名）
+  - domain_suffix:
+      match: 'comfylink.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'ndcpp.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'ydycdn.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'qrstuvwxyzab.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'wuchuyun.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'xinqiucc.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'jomoxc.com'
+      policy: REJECT
+  - domain_suffix:
+      match: 'wmzfylgdsz.com'
+      policy: REJECT
+  # ── 7. 电商推广位（红果内置商城 / 商品卡）— 想用商城就把这 4 条删掉或注释
+  #    红果内带货卡片、商品卡、商城推荐位都调这三个 ecombdapi 子域族
+  - domain_regex:
+      match: '^ecom[^.]*-normal[^.]*\.ecombdapi\.com$'
+      policy: REJECT
+  - domain_regex:
+      match: '^ec[^.]*-core[^.]*\.ecombdapi\.com$'
+      policy: REJECT
+  - domain_regex:
+      match: '^isaas[^.]*-normal[^.]*\.ecombdapi\.com$'
+      policy: REJECT
+  - domain_suffix:
+      match: 'ecombdpage.com'
+      policy: REJECT
+  # ── 8. 埋点 / 上报（不影响播放；若出现登录异常，先把 i*/log* 这十几条注释掉）
+  #    security.snssdk.com、is.snssdk.com、verify.zijieapi.com 是风控与登录，故意不动
+  - domain:
+      match: 'i.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'i-lq.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'i-hl.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'ib-lq.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'mon.zijieapi.com'
+      policy: REJECT
+  - domain:
+      match: 'applog.zijieapi.com'
+      policy: REJECT
+  - domain:
+      match: 'log.zijieapi.com'
+      policy: REJECT
+  - domain:
+      match: 'rtlog.zijieapi.com'
+      policy: REJECT
+  - domain:
+      match: 'timon.zijieapi.com'
+      policy: REJECT
+  - domain:
+      match: 'mon.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'applog.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'log.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'rtlog.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'report.snssdk.com'
+      policy: REJECT
+  - domain:
+      match: 'mon.toutiaocloud.net'
+      policy: REJECT
+  - domain:
+      match: 'mon.toutiaocloud.com'
+      policy: REJECT
+  - domain:
+      match: 'mon.toutiao.com'
+      policy: REJECT
+  - domain:
+      match: 'monsetting.toutiao.com'
+      policy: REJECT
+  - domain:
+      match: 'ichannel.snssdk.com'
+      policy: REJECT
+  - domain_keyword:
+      match: 'applog.fqnovel.com'
+      policy: REJECT
+  - domain_regex:
+      match: '^(?:mon|r?t?log)[0-9]*(?:-[a-z0-9]+)*\.fqnovel\.com$'
+      policy: REJECT
+  # ── 9. 内容 / 正片 / 图床白名单 — 全 DIRECT，防误伤（顺序必须在所有 REJECT 之后）
+  #    漫剧实证内容域：reading.snssdk.com、api3/api5-normal[-hl/-lf/-lq].fqnovel.com、p1/p3/p9-reading.byteimg.com、p3/p6-novel.byteimg.com、lf3/lf26-reading.fqnovelpic|static.com、v0-video-cn-private.qznovelvod.com
+  - domain_suffix:
+      match: 'qznovelvod.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'fqnovelvod.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'fqnovel.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'fqnovelpic.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'fqnovelstatic.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'byteimg.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'bytemaimg.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'bytemastatic.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'dailygn.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'pstatp.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'snssdk.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'zijieapi.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'bytedanceapi.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'toutiao.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'toutiaocloud.net'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'toutiaocloud.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'hongguo.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'douyin.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'douyinpic.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'douyinstatic.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'ecombdimg.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'bytegecko.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'bytefae.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'bytednsdoc.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'draftstatic.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'toutiaostatic.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'ixigua.com'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'bytecdn.cn'
+      policy: DIRECT
+  - domain_suffix:
+      match: 'zjcdn.com'
+      policy: DIRECT
+
+  # ═══════════════════════════════════════════════════════
+  #  可选段（默认全部注释，需要时把对应行前面的 # 去掉）
+  # ═══════════════════════════════════════════════════════
+  # 附 A. 红果内直播带货卡片（信令层）— 刷剧时右侧飘商品卡 / 「XX 正在直播」才打开
+  #   打开后红果内直播带货卡与伪装直播卡会消失；代价是本机抖音系 App 的直播间页面也会受影响，自己权衡
+  # - domain_regex:
+  #     match: '^webcast[a-z0-9-]*-open[a-z0-9-]*\.douyin\.com$'
+  #     policy: REJECT
+  # - domain:
+  #     match: 'content-open.douyin.com'
+  #     policy: REJECT
+  # 附 B. 全量 HTTPDNS 关键字封杀 — 上面 dig.* 还不够时再开
+  #   会把所有 App 的 HTTPDNS 都断掉（抖音、番茄等全受影响），只在 dig.* 无效时启用
+  # - domain_keyword:
+  #     match: 'httpdns'
+  #     policy: REJECT
+  # 附 C. 白山云字节节点（广告素材嫌疑，多源未定论）
+  #   拦了只影响广告素材加载；正片出现异常先删这条
+  # - domain:
+  #     match: 'v9-default.tt.x.bsgslb.cn'
+  #     policy: REJECT
