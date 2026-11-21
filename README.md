@@ -63,10 +63,12 @@ https://raw.githubusercontent.com/wukris1106/egern-hongguo-adblock/main/hongguo-
 | 商城 / 商品卡要用 | 删第 7 段 4 条 |
 | 正片黑屏 / 封面白图 | 检查用户自己的 profile 里有没有更靠前的 `DOMAIN-SUFFIX` 规则抢走（模块规则只有排在它前面才生效） |
 
-## 附：可选段（默认注释在文件末尾）
+## 附：可选段（默认注释，位置在「第 8 段埋点」和「第 9 段白名单」之间）
 
-- 附 A：红果内直播带货卡片信令（`webcast*-open*.douyin.com`）—— 打开后卡片消失，但本机抖音系 App 直播间页面会受影响。
-- 附 B：全量 `httpdns` 关键字封杀 —— 所有 App 的 HTTPDNS 都断，只在附 0 无效时用。
+> 一定要在那个位置去注释 —— 挪到白名单后面会被 `douyin.com DIRECT` 抢走，永远不生效。
+
+- 附 A：红果内直播带货卡片信令（`webcast*-open*.douyin.com`、`content-open.douyin.com`）—— 打开后卡片消失，但本机抖音系 App 直播间页面会受影响。
+- 附 B：全量 `httpdns` 关键字封杀 —— 所有 App 的 HTTPDNS 都断，只在第 0 段无效时用。
 - 附 C：`v9-default.tt.x.bsgslb.cn` 白山云节点 —— 素材嫌疑，未定论。
 
 ## 规则维护
