@@ -140,29 +140,38 @@ def q(s):
     return "'" + s.replace("'", "''") + "'"
 
 lines = [HEADER]
+OPT_BLOCK_START = '\n  # ═══════════════════════════════════════════════════════\n' \
+                  '  #  可选段（默认全部注释）。注意：必须留在第 9 段白名单之前，\n' \
+                  '  #  放到白名单后面会被 douyin.com DIRECT 抢走，永远不生效。\n' \
+                  '  #  需要时把对应行前面的 # 去掉。\n' \
+                  '  # ═══════════════════════════════════════════════════════\n'
+
+def optional_block():
+    out = [OPT_BLOCK_START]
+    for title, hosts, note in OPTIONAL:
+        out.append('  # %s\n  #   %s\n' % (title, note))
+        for h in hosts:
+            if '*' in h:
+                kind, m = 'domain_regex', '^' + h.replace('*', '[a-z0-9-]*').replace('.', r'\.') + '$'
+            elif h == 'httpdns':
+                kind, m = 'domain_keyword', 'httpdns'
+            else:
+                kind, m = 'domain', h
+            out.append('  # - %s:\n  #     match: %s\n  #     policy: REJECT\n' % (kind, q(m)))
+    out.append('\n')
+    return ''.join(out)
+
 for item in SECS:
     if item[0] == 'comment':
         _, title, note = item
+        if title.startswith('9.'):
+            lines.append(optional_block())
         lines.append('  # ── %s\n' % title)
         if note:
             lines.append('  #    %s\n' % note)
     else:
         _, kind, match, policy = item
         lines.append('  - %s:\n      match: %s\n      policy: %s\n' % (kind, q(match), policy))
-
-lines.append('\n  # ═══════════════════════════════════════════════════════\n'
-             '  #  可选段（默认全部注释，需要时把对应行前面的 # 去掉）\n'
-             '  # ═══════════════════════════════════════════════════════\n')
-for title, hosts, note in OPTIONAL:
-    lines.append('  # %s\n  #   %s\n' % (title, note))
-    for h in hosts:
-        if '*' in h:
-            kind, m = 'domain_regex', '^' + h.replace('*', '[a-z0-9-]*').replace('.', r'\.') + '$'
-        elif h == 'httpdns':
-            kind, m = 'domain_keyword', 'httpdns'
-        else:
-            kind, m = 'domain', h
-        lines.append('  # - %s:\n  #     match: %s\n  #     policy: REJECT\n' % (kind, q(m)))
 
 body = ''.join(lines)
 open('/root/hongguo-egern/hongguo-adblock.yaml', 'w').write(body)
