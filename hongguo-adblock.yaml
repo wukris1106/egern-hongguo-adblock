@@ -227,6 +227,31 @@ rules:
   - domain_regex:
       match: '^(?:mon|r?t?log)[0-9]*(?:-[a-z0-9]+)*\.fqnovel\.com$'
       policy: REJECT
+
+  # ═══════════════════════════════════════════════════════
+  #  可选段（默认全部注释）。注意：必须留在第 9 段白名单之前，
+  #  放到白名单后面会被 douyin.com DIRECT 抢走，永远不生效。
+  #  需要时把对应行前面的 # 去掉。
+  # ═══════════════════════════════════════════════════════
+  # 附 A. 红果内直播带货卡片（信令层）— 刷剧时右侧飘商品卡 / 「XX 正在直播」才打开
+  #   打开后红果内直播带货卡与伪装直播卡会消失；代价是本机抖音系 App 的直播间页面也会受影响，自己权衡
+  # - domain_regex:
+  #     match: '^webcast[a-z0-9-]*-open[a-z0-9-]*\.douyin\.com$'
+  #     policy: REJECT
+  # - domain:
+  #     match: 'content-open.douyin.com'
+  #     policy: REJECT
+  # 附 B. 全量 HTTPDNS 关键字封杀 — 上面 dig.* 还不够时再开
+  #   会把所有 App 的 HTTPDNS 都断掉（抖音、番茄等全受影响），只在 dig.* 无效时启用
+  # - domain_keyword:
+  #     match: 'httpdns'
+  #     policy: REJECT
+  # 附 C. 白山云字节节点（广告素材嫌疑，多源未定论）
+  #   拦了只影响广告素材加载；正片出现异常先删这条
+  # - domain:
+  #     match: 'v9-default.tt.x.bsgslb.cn'
+  #     policy: REJECT
+
   # ── 9. 内容 / 正片 / 图床白名单 — 全 DIRECT，防误伤（顺序必须在所有 REJECT 之后）
   #    漫剧实证内容域：reading.snssdk.com、api3/api5-normal[-hl/-lf/-lq].fqnovel.com、p1/p3/p9-reading.byteimg.com、p3/p6-novel.byteimg.com、lf3/lf26-reading.fqnovelpic|static.com、v0-video-cn-private.qznovelvod.com
   - domain_suffix:
@@ -316,25 +341,3 @@ rules:
   - domain_suffix:
       match: 'zjcdn.com'
       policy: DIRECT
-
-  # ═══════════════════════════════════════════════════════
-  #  可选段（默认全部注释，需要时把对应行前面的 # 去掉）
-  # ═══════════════════════════════════════════════════════
-  # 附 A. 红果内直播带货卡片（信令层）— 刷剧时右侧飘商品卡 / 「XX 正在直播」才打开
-  #   打开后红果内直播带货卡与伪装直播卡会消失；代价是本机抖音系 App 的直播间页面也会受影响，自己权衡
-  # - domain_regex:
-  #     match: '^webcast[a-z0-9-]*-open[a-z0-9-]*\.douyin\.com$'
-  #     policy: REJECT
-  # - domain:
-  #     match: 'content-open.douyin.com'
-  #     policy: REJECT
-  # 附 B. 全量 HTTPDNS 关键字封杀 — 上面 dig.* 还不够时再开
-  #   会把所有 App 的 HTTPDNS 都断掉（抖音、番茄等全受影响），只在 dig.* 无效时启用
-  # - domain_keyword:
-  #     match: 'httpdns'
-  #     policy: REJECT
-  # 附 C. 白山云字节节点（广告素材嫌疑，多源未定论）
-  #   拦了只影响广告素材加载；正片出现异常先删这条
-  # - domain:
-  #     match: 'v9-default.tt.x.bsgslb.cn'
-  #     policy: REJECT
